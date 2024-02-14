@@ -36,7 +36,7 @@ $page = basename($_SERVER['PHP_SELF'], ".php");
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AdminLTE 3 | Dashboard</title>
+  <title>Pelzon Dashboard</title>
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet"
@@ -104,9 +104,9 @@ $page = basename($_SERVER['PHP_SELF'], ".php");
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
       <!-- Brand Logo -->
-      <a href="" class="brand-link">
+      <a href="/index.php" class="brand-link">
         <div style="height:50px;">
-          <img src="./docs/assets/img/logo.webp" alt="AdminLTE Logo" class="brand-image  elevation-1">
+          <img src="./image/logo.webp" alt="AdminLTE Logo" class="brand-image  elevation-1">
         </div>
       </a>
 
