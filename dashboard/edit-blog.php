@@ -1,14 +1,14 @@
 <?php
-session_start();
+
 include '../conection.php';
 
-error_reporting(E_ERROR | E_PARSE);
+// error_reporting(E_ERROR | E_PARSE);
 
 include 'sidebar.php';
 
 $BlogId = $_GET['id'];
 
-if (empty($iBlogId)) {
+if (empty($BlogId)) {
   header('Location:Blog.php');
 }
 
@@ -59,7 +59,7 @@ $result = mysqli_fetch_array($query2);
         <div class="row mb-2">
           <div class="col-sm-6">
             <h1 class="m-0">Dashboard
-              <?= $BlogId ?>
+              
             </h1>
           </div><!-- /.col -->
           <div class="col-sm-6">
@@ -217,14 +217,16 @@ if (isset($_POST['update_blog'])) {
   
       } else {
   
-        $big_file = ' <p style="color:red;">File Limit 200mb </p>';
-      }
+        $big_file = '<p style="color:red;">File Limit 200mb </p>';
+
+        $_SESSION["alert"] = $big_file;      }
   
   
     } else {
   
-      $file_type = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
-  
+      $big_file = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
+
+      $_SESSION["alert"] = $big_file;  
     }
   }else{
     $update = "UPDATE blog 

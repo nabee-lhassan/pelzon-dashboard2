@@ -1,27 +1,95 @@
 <?php
-session_start();
+
 include '../conection.php';
 
-error_reporting(E_ERROR | E_PARSE);
+// error_reporting(E_ERROR | E_PARSE);
 
 include 'sidebar.php';
 
 
 
-if(isset($_SESSION['admin'])){
+if (isset($_SESSION['admin'])) {
 
-  
+
+
+} else {
+
+  ?>
+  <script>
+    alert('not getting user data')
+  </script>
+  <?php
 
 }
 
 
-else{
+if (isset($_POST['add_blog'])) {
 
-  ?>
-<script>
-  alert('not getting user data')
-</script>
-  <?php
+  $title = mysqli_real_escape_string($conn, $_POST['Blog_title']);
+  $body = mysqli_real_escape_string($conn, $_POST['Blog_body']);
+  $cat = mysqli_real_escape_string($conn, $_POST['Blog_cat']);
+
+  $fileName = $_FILES['image']['name'];
+  $fileTemp = $_FILES['image']['tmp_name'];
+  $fileSize = $_FILES['image']['size'];
+
+  $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+
+  $allowed_types = ['png', 'jpg', 'jpeg'];
+
+  $destination = "image/" . $fileName;
+
+
+  if (in_array($image_ext, $allowed_types)) {
+
+
+
+    if ($fileSize <= 2000000) {
+      move_uploaded_file($fileTemp, $destination);
+
+
+
+      $insert = "INSERT INTO blog (Blog_title, Blog_body, Blog_image, category, Author_id) 
+           VALUES ('$title', '$body', '$fileName', '$cat', '$user_id')";
+
+      $insert_query = mysqli_query($conn, $insert);
+
+
+      if ($insert_query) {
+        $msg = '<div class="alert alert-success" role="alert">
+        Blog Added Successfully
+      </div>';
+
+        $_SESSION["msg"] = $msg;
+        header("Location:Blog.php");
+      } else {
+
+        $msg = '<div class="alert alert-danger" role="alert">
+        Oops! Something went wrong
+      </div>';
+
+        $_SESSION["msg"] = $msg;
+        header("Location:add-blog.php");
+      }
+
+    } else {
+
+      $big_file = '<p style="color:red;">File Limit 200mb </p>';
+
+      $_SESSION["alert"] = $big_file;
+
+    }
+
+
+  } else {
+
+    $big_file = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
+
+    $_SESSION["alert"] = $big_file;
+  }
+
+
 
 }
 
@@ -40,7 +108,7 @@ else{
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">Dashboard  </h1>
+            <h1 class="m-0">Dashboard </h1>
           </div><!-- /.col -->
           <div class="col-sm-6">
 
@@ -78,8 +146,18 @@ else{
               <textarea name="Blog_body" id="" class="form-control mt-3" cols="30" rows="7"></textarea>
               <input type="file" name="image" class="form-control mt-3" id="">
 
-              <?= $big_file ?>
-              <?= $file_type ?>
+              <?php
+
+              if (isset($_SESSION['alert'])) {
+                $message = $_SESSION['alert'];
+                echo $message;
+
+                unset($_SESSION['alert']);
+                // header("Location:add-cat.php");
+              }
+
+              ?>
+
 
               <select name="Blog_cat" class="form-control mt-3" id="">
 
@@ -134,66 +212,6 @@ else{
 <?php
 include 'footer.php';
 
-if (isset($_POST['add_blog'])) {
 
-  $title = mysqli_real_escape_string($conn, $_POST['Blog_title']);
-  $body = mysqli_real_escape_string($conn, $_POST['Blog_body']);
-  $cat = mysqli_real_escape_string($conn, $_POST['Blog_cat']);
-
-  $fileName = $_FILES['image']['name'];
-  $fileTemp = $_FILES['image']['tmp_name'];
-  $fileSize = $_FILES['image']['size'];
-
-  $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-
-  $allowed_types = ['png', 'jpg', 'jpeg'];
-
-  $destination = "image/" . $fileName;
-
-
-  if (in_array($image_ext, $allowed_types)) {
-
-
-
-    if ($fileSize <= 2000000) {
-      move_uploaded_file($fileTemp, $destination);
-
-      $insert = "INSERT INTO Blog (Blog_title, Blog_body, Blog_image, category, Author_id) 
-           VALUES ('$title', '$body', '$fileName', '$cat', '$user_id')";
-
-$query = mysqli_query($conn, $insert);
-
-      if ($query) {
-        $msg = '<div class="alert alert-success" role="alert">
-        Blog Added Successfully
-      </div>';
-
-        $_SESSION ["msg"] = $msg;
-        header("Location:Blog.php");
-      }
-      else{
-        ?>
-        <script>
-          alert('Oops! Something went wrong')
-        </script>
-        <?php
-      }
-
-    } else {
-
-      $big_file = ' <p style="color:red;">File Limit 200mb </p>';
-    }
-
-
-  } else {
-
-    $file_type = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
-
-  }
-
-
-
-}
 
 ?>
