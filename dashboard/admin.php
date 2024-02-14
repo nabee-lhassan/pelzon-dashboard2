@@ -67,7 +67,7 @@ if ($row){
     <h5 class="card-title" style="font-weight: 700;font-size:12px;"> Category:<?= $row['cat_name'] ?></h5> <br>
     <h5 class="card-title" style="font-weight: 700;font-size:18px;">Title: <?= $row['Blog_title'] ?></h5>
     <p class="card-text"><?= $body_content . '...' ?></p>
-    <a href="#" class="btn btn-primary">Go somewhere</a>
+    
   </div>
 </div>
           </div>
