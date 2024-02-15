@@ -3,6 +3,7 @@ session_start();
 include 'conection.php';
 
 
+
 ?>
 
 <!DOCTYPE html>
@@ -39,9 +40,18 @@ include 'conection.php';
         </li>
         
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
+      <?php
+if(isset($_GET['keyword'])){
+  $keyword = $_GET['keyword'] ;
+}
+else{
+  $keyword = '' ;
+}
+
+      ?>
+      <form class="d-flex"  action="search.php" method="GET">
+        <input class="form-control me-2" type="search" autocomplete="off" name="keyword" value="<?= $keyword ?>" required placeholder="Search" >
+        <button class="btn btn-outline-success"  type="submit">Search</button>
       </form>
     </div>
   </div>

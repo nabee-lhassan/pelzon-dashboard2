@@ -78,7 +78,11 @@ aside.content-right {
     width: 30%;
     height: 100vh;
     float: right;
+    padding: 0% 3%;
 }
+
+
+
 aside.content-left {
     
     width: 70%;

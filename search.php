@@ -1,6 +1,9 @@
 <?php 
 include 'front_header.php';
 
+$keyword = $_GET['keyword'];
+
+
 ?>
 
 
@@ -8,6 +11,7 @@ include 'front_header.php';
 
 <div class="container">
   <div class="row ">
+    <h3 class="m-4"> Search Result For <span style="color:blue;"> <?= $keyword ?> </span> </h3>
 
   </div>
 </div>
@@ -52,8 +56,9 @@ include 'front_footer.php';
 
 $.each(data, function(kay,value){
   
+if (value.Blog_title == "<?= $keyword ?>" || value.Blog_body == "<?= $keyword ?>" || value.username == "<?= $keyword ?>" ){
 
-
+ 
   $Blog = `<div  class="m-2 card" style="width: 18rem;">
   <img src="./dashboard/image/${value.Blog_image}" class="card-img-top" alt="...">
   <div class="card-body">
@@ -67,7 +72,24 @@ $.each(data, function(kay,value){
 
 $('.row').append($Blog)
   
+}else{
+
+  $Nodata = `<div  class=" " style="width: 32rem; margin:15% auto;">
+ 
+  <div class="card-body">
+    <h5 class="card-title" style="font-size:50px;">Oops No Data Found</h5>
+   
+  </div>
+</div>`;
+
+// $('.row').append($Nodata)
+
+}
+
 })
+
+
+
       }
     })
     
