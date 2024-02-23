@@ -1,7 +1,7 @@
 <?php 
 include 'front_header.php';
 
-$keyword = $_GET['keyword'];
+$keyword = strtolower($_GET['keyword']);
 
 
 ?>
@@ -49,14 +49,16 @@ include 'front_footer.php';
   $(document).ready(function(){
 
     $.ajax({ 
-      url: "http://localhost/pelzon%20dashboard/dashboard/api.php",
+      url: "http://localhost/pelzon-dashboard2/dashboard/api.php",
       type: "GET",
       success: function(data){
 // $('.content-left').append(data.Blog_id)
 
 $.each(data, function(kay,value){
+
+ 
   
-if (value.Blog_title == "<?= $keyword ?>" || value.Blog_body == "<?= $keyword ?>" || value.username == "<?= $keyword ?>" ){
+  if (value.Blog_title.toLowerCase() === "<?= strtolower($keyword) ?>" || value.Blog_body.toLowerCase() === "<?= strtolower($keyword) ?>" || value.username.toLowerCase() === "<?= strtolower($keyword) ?>") {
 
  
   $Blog = `<div  class="m-2 card" style="width: 18rem;">
