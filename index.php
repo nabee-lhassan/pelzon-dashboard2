@@ -45,7 +45,7 @@ include 'front_footer.php';
   $(document).ready(function(){
 
     $.ajax({ 
-      url: "http://localhost/pelzon%20dashboard/dashboard/api.php",
+      url: "http://localhost/pelzon-dashboard2/dashboard/api.php",
       type: "GET",
       success: function(data){
 // $('.content-left').append(data.Blog_id)
@@ -73,7 +73,7 @@ $('.row').append($Blog)
     
     
     $.ajax({ 
-      url: "http://localhost/pelzon%20dashboard/dashboard/category_api.php",
+      url: "http://localhost/pelzon-dashboard2/dashboard/category_api.php",
       type: "GET",
       success: function(data){
 // $('.content-left').append(data.Blog_id)
