@@ -1,6 +1,8 @@
 <?php 
 include 'front_header.php';
 
+$B_cat_id = $_GET['id']
+
 ?>
 
 
@@ -52,8 +54,7 @@ include 'front_footer.php';
 
 $.each(data, function(kay,value){
   
-
-
+if (value.cat_id == "<?= $B_cat_id ?>"){
   $Blog = `<div  class="m-2 card" style="width: 18rem;">
   <img src="./dashboard/image/${value.Blog_image}" class="card-img-top" alt="...">
   <div class="card-body">
@@ -66,6 +67,9 @@ $.each(data, function(kay,value){
 </div>`;
 
 $('.row').append($Blog)
+
+}
+
   
 })
       }
@@ -83,7 +87,7 @@ $.each(data, function(kay,value){
 
 
   $Categories = ` <tr>
-      <th  style="text-align:left;background-color:white;"><a href="./B_category.php?id=${value.cat_id}" style="color:Black; text-decoration:none;font-weight:400;">${value.cat_name} </a></th>
+      <th  style="text-align:left;background-color:white;"><a href="" style="color:Black; text-decoration:none;font-weight:400;">${value.cat_name} </a></th>
       
     </tr>`;
 
