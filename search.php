@@ -1,7 +1,7 @@
 <?php 
 include 'front_header.php';
 
-$keyword = strtolower($_GET['keyword']);
+$keyword = $_GET['keyword'];
 
 
 ?>
@@ -56,9 +56,11 @@ include 'front_footer.php';
 
 $.each(data, function(kay,value){
 
- 
+ console.log(data)
+ console.log(value)
   
-  if (value.Blog_title.toLowerCase() === "<?= strtolower($keyword) ?>" || value.Blog_body.toLowerCase() === "<?= strtolower($keyword) ?>" || value.username.toLowerCase() === "<?= strtolower($keyword) ?>") {
+  if (value.Blog_title.toLowerCase().includes("<?= strtolower($keyword) ?>") || value.cat_name.toLowerCase().includes("<?= strtolower($keyword) ?>") || value.Blog_body.toLowerCase().includes("<?= strtolower($keyword) ?>") || value.username.toLowerCase().includes("<?= strtolower($keyword) ?>")) {
+    // if (value.Blog_body.toLowerCase().includes("<?= strtolower($keyword) ?>")) {
 
  
   $Blog = `<div  class="m-2 card" style="width: 18rem;">
