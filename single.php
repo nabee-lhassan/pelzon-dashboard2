@@ -13,9 +13,7 @@ include 'front_header.php';
 </div>
 
 </aside>
-<aside class="content-right">
 
-</aside>
 
 
 
@@ -27,6 +25,7 @@ $id = $_GET['id'];
 <?php 
 
 include 'front_footer.php';
+include 'right_side.php';
 
 ?>
 

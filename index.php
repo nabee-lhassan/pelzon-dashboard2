@@ -4,32 +4,22 @@ include 'front_header.php';
 ?>
 
 
-<aside class="content-left">
+<aside class="content-left" >
 
 <div class="container">
-  <div class="row ">
+  <div class="row filter-row">
+<div class="filter-tab">
+
+</div>
+  </div>
+  <div class="row Blog-row">
 
   </div>
 </div>
 
 
 </aside>
-<aside class="content-right">
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col" style="text-align:left;">Categories</th>
-      
-    </tr>
-  </thead>
-  <tbody class="display-cate">
-    
-    
-    
-  </tbody>
-</table>
 
-</aside>
 
 
 
@@ -38,6 +28,7 @@ include 'front_header.php';
 <?php 
 
 include 'front_footer.php';
+include 'right_side.php';
 
 ?>
 
@@ -65,7 +56,7 @@ $.each(data, function(kay,value){
   </div>
 </div>`;
 
-$('.row').append($Blog)
+$('.Blog-row').append($Blog)
   
 })
       }
@@ -78,22 +69,69 @@ $('.row').append($Blog)
       success: function(data){
 // $('.content-left').append(data.Blog_id)
 
+let tab_count = 0
+
 $.each(data, function(kay,value){
   
+  $Categories_filter = ` 
+      <button class="filter-btn"  data-category="${++tab_count}" >${value.cat_name} </button>`;
 
+    $('.filter-tab').append($Categories_filter)
 
-  $Categories = ` <tr>
-      <th  style="text-align:left;background-color:white;"><a href="./B_category.php?id=${value.cat_id}" style="color:Black; text-decoration:none;font-weight:400;">${value.cat_name} </a></th>
+   
+// var filter_btn = $(".filter-btn");
+
+// filter_btn.each(function(i, e) {
+  
+//   var cat_att = $(e).attr('data-category');
+  
+//   $(e).on('click', function() {
+
+//     if (cat_att == $(e).innerHtml ){
+//       console.log(cat_att);
+//     }
+//     else{
+//       console.log("not found");
+
+//     }
       
-    </tr>`;
+//   });
+// });
 
-$('.display-cate').append($Categories)
+
+
+var filter_btn = $(".filter-btn");
+
+filter_btn.each(function(i, e) {
+    var cat_att = $(e).attr('data-category');
+
+    $(e).on('click', function(ev) {
+      // console.log(ev);  
+      // let asd = $(ev).text(); 
+      
+      if (cat_att == 1) {
+            $(e).addClass('class1 ');
+            console.log(cat_att);
+          } else  {
+            $(e).removeClass('class1 ');
+            console.log("not found");
+        }
+    });
+});
+
+
+
+
   
 })
       }
     })
 
   })
+
+
+
+
 </script>
 
   </body>

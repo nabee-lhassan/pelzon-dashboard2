@@ -18,22 +18,7 @@ $keyword = $_GET['keyword'];
 
 
 </aside>
-<aside class="content-right">
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col" style="text-align:left;">Categories</th>
-      
-    </tr>
-  </thead>
-  <tbody class="display-cate">
-    
-    
-    
-  </tbody>
-</table>
 
-</aside>
 
 
 
@@ -42,6 +27,7 @@ $keyword = $_GET['keyword'];
 <?php 
 
 include 'front_footer.php';
+include 'right_side.php';
 
 ?>
 
@@ -98,26 +84,7 @@ $('.row').append($Blog)
     })
     
     
-    $.ajax({ 
-      url: "http://localhost/pelzon%20dashboard/dashboard/category_api.php",
-      type: "GET",
-      success: function(data){
-// $('.content-left').append(data.Blog_id)
-
-$.each(data, function(kay,value){
-  
-
-
-  $Categories = ` <tr>
-      <th  style="text-align:left;background-color:white;"><a href="" style="color:Black; text-decoration:none;font-weight:400;">${value.cat_name} </a></th>
-      
-    </tr>`;
-
-$('.display-cate').append($Categories)
-  
-})
-      }
-    })
+    
 
   })
 </script>
