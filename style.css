@@ -11,6 +11,22 @@
     position: relative;
 }
 
+.brand-link .brand-image {
+  
+  width:90%;
+  min-height: fit-content; 
+}
+.elevation-1 {
+
+    box-shadow: none !important;
+
+}
+
+.brand-link {
+    display: inline;
+  
+}
+
 
 .login-main::before {
     position: absolute;

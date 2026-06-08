@@ -1,263 +1,387 @@
 <?php
 session_start();
 include '../conection.php';
+include 'sidebar.php';
 
 error_reporting(E_ERROR | E_PARSE);
 
-include 'sidebar.php';
-
-$BlogId = $_GET['id'];
-// echo 'fdsfsfsdf' . $BlogId;
-
-
-if (isset($_SESSION['admin'])) {
-
-
-
-} else {
-
-  ?>
-  <script>
-    alert('not getting user data')
-  </script>
-  <?php
-
+function createSlug($string) {
+    $slug = strtolower(trim($string));
+    $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
+    $slug = preg_replace('/-+/', '-', $slug);
+    return trim($slug, '-');
 }
 
-if (isset($_POST['add_blog'])) {
+$BlogId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
-  $title = mysqli_real_escape_string($conn, $_POST['Blog_title']);
-  $body = mysqli_real_escape_string($conn, $_POST['Blog_body']);
-  $cat = mysqli_real_escape_string($conn, $_POST['Blog_cat']);
+if ($BlogId <= 0) {
+    header("Location: Blog.php");
+    exit;
+}
 
-  $fileName = $_FILES['image']['name'];
-  $fileTemp = $_FILES['image']['tmp_name'];
-  $fileSize = $_FILES['image']['size'];
-
-  $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-
-  $allowed_types = ['png', 'jpg', 'jpeg'];
-
-  $destination = "image/" . $fileName;
-
-
-  if (in_array($image_ext, $allowed_types)) {
-
-
-
-    if ($fileSize <= 2000000) {
-      move_uploaded_file($fileTemp, $destination);
-
-      $Update = "UPDATE blog
-      SET Blog_title = '$title',
-          Blog_body = '$body',
-          Blog_image = '$fileName',
-          category = '$cat'
-      WHERE blog_id = $id ";
-
-      $query = mysqli_query($conn, $Update);
-
-      if ($query) {
-
-        ?>
-        <script>
-          alert('Blog added Successfully')
-
-        </script>
-        <?php
-      } else {
-        ?>
-        <script>
-          alert('Oops! Something went wrong')
-        </script>
-        <?php
-      }
-
+/* DELETE BLOG */
+if (isset($_GET['action']) && $_GET['action'] === 'delete') {
+    
+    // Fetch the blog image
+    $imageSelect = "SELECT featured_image FROM blogs WHERE id = $BlogId";
+    $imageQuery = mysqli_query($conn, $imageSelect);
+    
+    if ($imageQuery && mysqli_num_rows($imageQuery) > 0) {
+        $imageRow = mysqli_fetch_assoc($imageQuery);
+        
+        // Delete image file if exists
+        if (!empty($imageRow['featured_image'])) {
+            $imagePath = "image/" . $imageRow['featured_image'];
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+        }
+    }
+    
+    // Delete the blog
+    $delete = "DELETE FROM blogs WHERE id = $BlogId";
+    $deleteQuery = mysqli_query($conn, $delete);
+    
+    if ($deleteQuery) {
+        $_SESSION["msg"] = '<div class="alert alert-success">Blog deleted successfully.</div>';
+        header("Location: Blog.php");
+        exit;
     } else {
+        $_SESSION["msg"] = '<div class="alert alert-danger">Failed to delete blog: ' . mysqli_error($conn) . '</div>';
+        header("Location: Blog.php");
+        exit;
+    }
+}
 
-      $big_file = ' <p style="color:red;">File Limit 200mb </p>';
+/* Fetch blog data */
+$select = "SELECT * FROM blogs WHERE id = $BlogId";
+$query = mysqli_query($conn, $select);
+
+if (!$query || mysqli_num_rows($query) == 0) {
+    $_SESSION["msg"] = '<div class="alert alert-warning">Blog not found.</div>';
+    header("Location: Blog.php");
+    exit;
+}
+
+$blog = mysqli_fetch_assoc($query);
+
+/* Update blog */
+if (isset($_POST['update_blog'])) {
+
+    $title = mysqli_real_escape_string($conn, trim($_POST['title']));
+    $slug = mysqli_real_escape_string($conn, trim($_POST['slug']));
+    $short_description = mysqli_real_escape_string($conn, trim($_POST['short_description']));
+    $content = mysqli_real_escape_string($conn, $_POST['content']);
+    $category_id = !empty($_POST['category_id']) ? (int) $_POST['category_id'] : "NULL";
+    $image_alt = mysqli_real_escape_string($conn, trim($_POST['image_alt']));
+    $meta_title = mysqli_real_escape_string($conn, trim($_POST['meta_title']));
+    $meta_description = mysqli_real_escape_string($conn, trim($_POST['meta_description']));
+    $meta_keywords = mysqli_real_escape_string($conn, trim($_POST['meta_keywords']));
+    $canonical_url = mysqli_real_escape_string($conn, trim($_POST['canonical_url']));
+    $status = mysqli_real_escape_string($conn, $_POST['status']);
+
+    if (empty($slug)) {
+        $slug = createSlug($title);
+    } else {
+        $slug = createSlug($slug);
     }
 
+    /* Check duplicate slug except current blog */
+    $checkSlug = "SELECT id FROM blogs WHERE slug = '$slug' AND id != $BlogId";
+    $checkQuery = mysqli_query($conn, $checkSlug);
 
-  } else {
+    if ($checkQuery && mysqli_num_rows($checkQuery) > 0) {
+        $_SESSION["msg"] = '<div class="alert alert-info">This slug already exists. Please use another slug.</div>';
+        header("Location: edit-blog.php?id=$BlogId");
+        exit;
+    }
 
-    $file_type = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
+    $featured_image = $blog['featured_image'];
 
-  }
+    /* If new image selected */
+    if (!empty($_FILES['image']['name'])) {
 
+        $fileName = $_FILES['image']['name'];
+        $fileTemp = $_FILES['image']['tmp_name'];
+        $fileSize = $_FILES['image']['size'];
 
+        $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $allowed_types = ['png', 'jpg', 'jpeg', 'webp'];
 
+        if (!in_array($image_ext, $allowed_types)) {
+            $_SESSION["msg"] = '<div class="alert alert-danger">Only jpeg, png, jpg, webp images are allowed.</div>';
+            header("Location: edit-blog.php?id=$BlogId");
+            exit;
+        }
+
+        if ($fileSize > 2000000) {
+            $_SESSION["msg"] = '<div class="alert alert-danger">File size must be less than 2MB.</div>';
+            header("Location: edit-blog.php?id=$BlogId");
+            exit;
+        }
+
+        $newFileName = time() . '-' . createSlug(pathinfo($fileName, PATHINFO_FILENAME)) . '.' . $image_ext;
+        $destination = "image/" . $newFileName;
+
+        if (move_uploaded_file($fileTemp, $destination)) {
+
+            if (!empty($blog['featured_image'])) {
+                $oldImage = "image/" . $blog['featured_image'];
+
+                if (file_exists($oldImage)) {
+                    unlink($oldImage);
+                }
+            }
+
+            $featured_image = $newFileName;
+        }
+    }
+
+    $update = "
+        UPDATE blogs SET
+            category_id = $category_id,
+            title = '$title',
+            slug = '$slug',
+            short_description = '$short_description',
+            content = '$content',
+            featured_image = '$featured_image',
+            image_alt = '$image_alt',
+            meta_title = '$meta_title',
+            meta_description = '$meta_description',
+            meta_keywords = '$meta_keywords',
+            canonical_url = '$canonical_url',
+            status = '$status'
+        WHERE id = $BlogId
+    ";
+
+    $updateQuery = mysqli_query($conn, $update);
+
+    if ($updateQuery) {
+        $_SESSION["msg"] = '<div class="alert alert-success">Blog updated successfully.</div>';
+        header("Location: Blog.php");
+        exit;
+    } else {
+        $_SESSION["msg"] = '<div class="alert alert-danger">Something went wrong: ' . mysqli_error($conn) . '</div>';
+        header("Location: edit-blog.php?id=$BlogId");
+        exit;
+    }
 }
 
-
-
-
-
-
-
-
-// echo $BlogId ;
-
+/* Fetch categories */
+$catSelect = "SELECT * FROM category WHERE status = 'active' ORDER BY cat_name ASC";
+$catQuery = mysqli_query($conn, $catSelect);
 ?>
 
 <div class="wrapper">
 
+    <div class="content-wrapper">
 
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Edit Blog</h1>
+                    </div>
 
-
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">Dashboard
-              <?= $BlogId ?>
-            </h1>
-          </div><!-- /.col -->
-          <div class="col-sm-6">
-
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content-header -->
-
-
-
-    <!-- content body  -->
-
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 d-flex justify-content-center">
-
-          <?php
-
-
-          $select = "SELECT * FROM blog
-          LEFT JOIN category ON blog.category = category.id
-          LEFT JOIN login ON blog.Author_id = login.id
-          WHERE blog.Author_id = $user_id AND Blog_id = $BlogId";
-          $query = mysqli_query($conn, $select);
-
-
-
-          $row = mysqli_fetch_array($query);
-
-          $in_place = $row['Blog_title'];
-          $tex_place = $row['Blog_body'];
-          $image_place = $row['Blog_image'];
-
-
-
-          ?>
-
-          <div class="mb-3"
-            style="background-color: #e9e9e9; width: 50%; padding: 20px; box-shadow: 0px 0px 6px 0px gray;">
-
-
-            <form action="" method="POST" enctype="multipart/form-data">
-
-              <label for="formGroupExampleInput" class="form-label"></label>
-              <?php
-
-
-
-              // $select = "SELECT * FROM category  WHERE Blog_id = $BlogId";
-              $select = "SELECT * FROM blog
-              LEFT JOIN category ON blog.category = category.id
-              LEFT JOIN login ON blog.Author_id = login.id
-              WHERE  blog.Author_id = $user_id";
-              $query = mysqli_query($conn, $select);
-
-              $cat_place = $row['cat_name'];
-
-
-              ?>
-
-              <?php
-
-
-              ?>
-              <input type="text" class="form-control" value="<?= $in_place ?>" name="Blog_title"
-                id="formGroupExampleInput" placeholder="Blog Title">
-              <textarea name="Blog_body" id="" class="form-control mt-3" cols="30"
-                rows="7"> <?= $tex_place ?></textarea>
-              <input type="file" name="image" value="<?= $image_place ?>" class="form-control mt-3" id="">
-              <img width="50px" src="image/<?= $image_place ?>" alt="">
-
-              <?= $big_file ?>
-              <?= $file_type ?>
-
-              <select name="Blog_cat" class="form-control mt-3" id="">
-
-                <?php
-                while ($row = mysqli_fetch_array($query)) {
-                  ?>
-                  <option value="<?= $row['id'] ?>" <?php
-
-                    if ($row['cat_name'] == $row['id']) {
-                      echo ' selected="selected"';
-                    } else {
-                      echo ' ';
-                    }
-
-                    ?>>
-                    <?= $row['cat_name'] ?>
-                  </option>
-                  <?php
-
-                }
-
-                ?>
-
-              </select>
-
-
-              <button name="add_blog" class="btn btn-primary m-2">Add</button>
-              <a href="./admin.php" class="btn btn-secondary m-2">Go back</a>
-            </form>
-
-
-          </div>
-
-
+                    <div class="col-sm-6 text-right">
+                        <a href="./Blog.php" class="btn btn-secondary">Go Back</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <section class="content">
+            <div class="container-fluid">
 
-      </div>
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
 
+                        <?php
+                        if (isset($_SESSION["msg"])) {
+                            echo $_SESSION["msg"];
+                            unset($_SESSION["msg"]);
+                        }
+                        ?>
 
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Edit Blog Details</h3>
+                            </div>
 
+                            <div class="card-body">
+
+                                <form action="" method="POST" enctype="multipart/form-data">
+
+                                    <div class="form-group">
+                                        <label>Blog Title</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="title" 
+                                            value="<?= htmlspecialchars($blog['title']); ?>"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Slug / URL</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="slug" 
+                                            value="<?= htmlspecialchars($blog['slug']); ?>"
+                                            placeholder="example: best-flooring-options"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Short Description</label>
+                                        <textarea 
+                                            name="short_description" 
+                                            class="form-control" 
+                                            rows="3"
+                                        ><?= htmlspecialchars($blog['short_description']); ?></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Blog Content</label>
+                                        <textarea 
+                                            name="content" 
+                                            class="form-control" 
+                                            rows="8"
+                                            required
+                                        ><?= htmlspecialchars($blog['content']); ?></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Current Image</label><br>
+
+                                        <?php if (!empty($blog['featured_image'])): ?>
+                                            <img 
+                                                src="image/<?= htmlspecialchars($blog['featured_image']); ?>" 
+                                                width="120" 
+                                                height="80"
+                                                style="object-fit:cover;"
+                                            >
+                                        <?php else: ?>
+                                            <p>No Image</p>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Change Featured Image</label>
+                                        <input 
+                                            type="file" 
+                                            name="image" 
+                                            class="form-control"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Image Alt Text</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="image_alt" 
+                                            value="<?= htmlspecialchars($blog['image_alt']); ?>"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Category</label>
+                                        <select name="category_id" class="form-control">
+                                            <option value="">Select Category</option>
+
+                                            <?php if ($catQuery && mysqli_num_rows($catQuery) > 0): ?>
+                                                <?php while ($cat = mysqli_fetch_assoc($catQuery)): ?>
+                                                    <option 
+                                                        value="<?= $cat['cat_id']; ?>"
+                                                        <?= $blog['category_id'] == $cat['cat_id'] ? 'selected' : ''; ?>
+                                                    >
+                                                        <?= htmlspecialchars($cat['cat_name']); ?>
+                                                    </option>
+                                                <?php endwhile; ?>
+                                            <?php endif; ?>
+
+                                        </select>
+                                    </div>
+
+                                    <hr>
+
+                                    <h5>SEO Settings</h5>
+
+                                    <div class="form-group">
+                                        <label>Meta Title</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="meta_title" 
+                                            value="<?= htmlspecialchars($blog['meta_title']); ?>"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Meta Description</label>
+                                        <textarea 
+                                            name="meta_description" 
+                                            class="form-control" 
+                                            rows="3"
+                                        ><?= htmlspecialchars($blog['meta_description']); ?></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Meta Keywords</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="meta_keywords" 
+                                            value="<?= htmlspecialchars($blog['meta_keywords']); ?>"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Canonical URL</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="canonical_url" 
+                                            value="<?= htmlspecialchars($blog['canonical_url']); ?>"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="draft" <?= $blog['status'] == 'draft' ? 'selected' : ''; ?>>
+                                                Draft
+                                            </option>
+                                            <option value="published" <?= $blog['status'] == 'published' ? 'selected' : ''; ?>>
+                                                Published
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <button name="update_blog" type="submit" class="btn btn-primary">
+                                        Update Blog
+                                    </button>
+
+                                    <a href="./Blog.php" class="btn btn-secondary">
+                                        Cancel
+                                    </a>
+
+                                </form>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
 
     </div>
-
-
-  </div>
-  <!-- /.content-wrapper -->
-
-  <!-- <footer class="main-footer">
-    <strong>Copyright &copy; 2023 Pelzon</strong>
-    All rights reserved.
-    <div class="float-right d-none d-sm-inline-block">
-      
-    </div>
-  </footer> -->
 
 </div>
-<!-- ./wrapper -->
 
-<?php
-
-
-
-
-include 'footer.php';
-
-
-
-
-
-?>
+<?php include 'footer.php'; ?>

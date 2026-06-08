@@ -1,217 +1,350 @@
 <?php
 
 include '../conection.php';
-
 // error_reporting(E_ERROR | E_PARSE);
-
 include 'sidebar.php';
 
-
-
-if (isset($_SESSION['admin'])) {
-
-
-
-} else {
-
-  ?>
-  <script>
-    alert('not getting user data')
-  </script>
-  <?php
-
+function createSlug($string) {
+    $slug = strtolower(trim($string));
+    $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
+    $slug = preg_replace('/-+/', '-', $slug);
+    return trim($slug, '-');
 }
-
 
 if (isset($_POST['add_blog'])) {
 
-  $title = mysqli_real_escape_string($conn, $_POST['Blog_title']);
-  $body = mysqli_real_escape_string($conn, $_POST['Blog_body']);
-  $cat = mysqli_real_escape_string($conn, $_POST['Blog_cat']);
+    $title = mysqli_real_escape_string($conn, $_POST['title']);
+    $slug = mysqli_real_escape_string($conn, $_POST['slug']);
+    $short_description = mysqli_real_escape_string($conn, $_POST['short_description']);
+    $content = mysqli_real_escape_string($conn, $_POST['content']);
+    $category_id = mysqli_real_escape_string($conn, $_POST['category_id']);
+    $image_alt = mysqli_real_escape_string($conn, $_POST['image_alt']);
+    $meta_title = mysqli_real_escape_string($conn, $_POST['meta_title']);
+    $meta_description = mysqli_real_escape_string($conn, $_POST['meta_description']);
+    $meta_keywords = mysqli_real_escape_string($conn, $_POST['meta_keywords']);
+    $canonical_url = mysqli_real_escape_string($conn, $_POST['canonical_url']);
+    $status = mysqli_real_escape_string($conn, $_POST['status']);
 
-  $fileName = $_FILES['image']['name'];
-  $fileTemp = $_FILES['image']['tmp_name'];
-  $fileSize = $_FILES['image']['size'];
-
-  $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-
-  $allowed_types = ['png', 'jpg', 'jpeg'];
-
-  $destination = "image/" . $fileName;
-
-
-  if (in_array($image_ext, $allowed_types)) {
-
-
-
-    if ($fileSize <= 2000000) {
-      move_uploaded_file($fileTemp, $destination);
-
-
-
-      $insert = "INSERT INTO blog (Blog_title, Blog_body, Blog_image, category, Author_id) 
-           VALUES ('$title', '$body', '$fileName', '$cat', '$user_id')";
-
-      $insert_query = mysqli_query($conn, $insert);
-
-
-      if ($insert_query) {
-        $msg = '<div class="alert alert-success" role="alert">
-        Blog Added Successfully
-      </div>';
-
-        $_SESSION["msg"] = $msg;
-        header("Location:Blog.php");
-      } else {
-
-        $msg = '<div class="alert alert-danger" role="alert">
-        Oops! Something went wrong
-      </div>';
-
-        $_SESSION["msg"] = $msg;
-        header("Location:add-blog.php");
-      }
-
+    if (empty($slug)) {
+        $slug = createSlug($title);
     } else {
-
-      $big_file = '<p style="color:red;">File Limit 200mb </p>';
-
-      $_SESSION["alert"] = $big_file;
-
+        $slug = createSlug($slug);
     }
 
+    $featured_image = "";
 
-  } else {
+    if (!empty($_FILES['image']['name'])) {
 
-    $big_file = '<p style="color:red;"> Only allowed jpeg, png, jpg </p>';
+        $fileName = $_FILES['image']['name'];
+        $fileTemp = $_FILES['image']['tmp_name'];
+        $fileSize = $_FILES['image']['size'];
 
-    $_SESSION["alert"] = $big_file;
-  }
+        $image_ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $allowed_types = ['png', 'jpg', 'jpeg', 'webp'];
 
+        $newFileName = time() . '-' . createSlug(pathinfo($fileName, PATHINFO_FILENAME)) . '.' . $image_ext;
+        $destination = "image/" . $newFileName;
 
+        if (!in_array($image_ext, $allowed_types)) {
+            $_SESSION["alert"] = '<p style="color:red;">Only jpeg, png, jpg, webp images are allowed.</p>';
+            header("Location:add-blog.php");
+            exit;
+        }
 
+        if ($fileSize > 2000000) {
+            $_SESSION["alert"] = '<p style="color:red;">File size must be less than 2MB.</p>';
+            header("Location:add-blog.php");
+            exit;
+        }
+
+        if (move_uploaded_file($fileTemp, $destination)) {
+            $featured_image = $newFileName;
+        }
+    }
+
+    $insert = "
+        INSERT INTO blogs (
+            category_id,
+            title,
+            slug,
+            short_description,
+            content,
+            featured_image,
+            image_alt,
+            meta_title,
+            meta_description,
+            meta_keywords,
+            canonical_url,
+            status
+        ) VALUES (
+            '$category_id',
+            '$title',
+            '$slug',
+            '$short_description',
+            '$content',
+            '$featured_image',
+            '$image_alt',
+            '$meta_title',
+            '$meta_description',
+            '$meta_keywords',
+            '$canonical_url',
+            '$status'
+        )
+    ";
+
+    $insert_query = mysqli_query($conn, $insert);
+
+    if ($insert_query) {
+        $_SESSION["msg"] = '<div class="alert alert-success" role="alert">Blog Added Successfully</div>';
+        header("Location:Blog.php");
+        exit;
+    } else {
+        $_SESSION["msg"] = '<div class="alert alert-danger" role="alert">Oops! Something went wrong: ' . mysqli_error($conn) . '</div>';
+        header("Location:add-blog.php");
+        exit;
+    }
 }
 
+$select = "SELECT * FROM category WHERE status = 'active' ORDER BY cat_name ASC";
+$query = mysqli_query($conn, $select);
 
 ?>
 
 <div class="wrapper">
 
+    <div class="content-wrapper">
 
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Add Blog</h1>
+                    </div>
 
-
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">Dashboard </h1>
-          </div><!-- /.col -->
-          <div class="col-sm-6">
-
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content-header -->
-
-
-
-    <!-- content body  -->
-
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 d-flex justify-content-center">
-
-          <?php
-          $select = "SELECT * FROM category  WHERE Author_id = $user_id ";
-          $query = mysqli_query($conn, $select);
-
-          ?>
-
-          <div class="mb-3"
-            style="background-color: #e9e9e9; width: 50%; padding: 20px; box-shadow: 0px 0px 6px 0px gray;">
-
-
-            <form action="" method="POST" enctype="multipart/form-data">
-
-
-              <label for="formGroupExampleInput" class="form-label"></label>
-              <input type="text" class="form-control" value="" name="Blog_title" id="formGroupExampleInput"
-                placeholder="Blog Title">
-
-              <textarea name="Blog_body" id="" class="form-control mt-3" cols="30" rows="7"></textarea>
-              <input type="file" name="image" class="form-control mt-3" id="">
-
-              <?php
-
-              if (isset($_SESSION['alert'])) {
-                $message = $_SESSION['alert'];
-                echo $message;
-
-                unset($_SESSION['alert']);
-                // header("Location:add-cat.php");
-              }
-
-              ?>
-
-
-              <select name="Blog_cat" class="form-control mt-3" id="">
-
-                <option value=""> Select Category</option>
-                <?php
-                while ($row = mysqli_fetch_array($query)) {
-                  ?>
-                  <option value="<?= $row['cat_id'] ?>">
-                    <?= $row['cat_name'] ?>
-                  </option>
-                  <?php
-
-                }
-
-                ?>
-
-              </select>
-
-              <button name="add_blog" class="btn btn-primary m-2">Add</button>
-              <a href="./admin.php" class="btn btn-secondary m-2">Go back</a>
-            </form>
-
-
-          </div>
-
-
+                    <div class="col-sm-6 text-right">
+                        <a href="./Blog.php" class="btn btn-secondary">Go Back</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <section class="content">
+            <div class="container-fluid">
 
-      </div>
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
 
+                        <?php
+                        if (isset($_SESSION['alert'])) {
+                            echo $_SESSION['alert'];
+                            unset($_SESSION['alert']);
+                        }
 
+                        if (isset($_SESSION['msg'])) {
+                            echo $_SESSION['msg'];
+                            unset($_SESSION['msg']);
+                        }
+                        ?>
 
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Blog Details</h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <form action="" method="POST" enctype="multipart/form-data">
+
+                                    <div class="form-group">
+                                        <label>Blog Title</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="title" 
+                                            placeholder="Enter Blog Title"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Slug / URL</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="slug" 
+                                            placeholder="example: best-flooring-options"
+                                        >
+                                        <small class="text-muted">Empty choro to title se auto generate ho jayega.</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Short Description</label>
+                                        <textarea 
+                                            name="short_description" 
+                                            class="form-control" 
+                                            rows="3"
+                                            placeholder="Short summary for blog listing"
+                                        ></textarea>
+                                    </div>
+
+<div class="form-group">
+    <label>Blog Content</label>
+    <textarea 
+        name="content" 
+        id="blogEditor"
+        class="form-control" 
+        rows="10"
+        placeholder="Write full blog content here"
+    ></textarea>
+</div>
+
+                                    <div class="form-group">
+                                        <label>Featured Image</label>
+                                        <input 
+                                            type="file" 
+                                            name="image" 
+                                            class="form-control"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Image Alt Text</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="image_alt" 
+                                            placeholder="Describe image for SEO"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Category</label>
+                                        <select name="category_id" class="form-control">
+                                            <option value="">Select Category</option>
+
+                                            <?php if ($query && mysqli_num_rows($query) > 0): ?>
+                                                <?php while ($row = mysqli_fetch_assoc($query)): ?>
+                                                    <option value="<?= $row['cat_id']; ?>">
+                                                        <?= htmlspecialchars($row['cat_name']); ?>
+                                                    </option>
+                                                <?php endwhile; ?>
+                                            <?php endif; ?>
+
+                                        </select>
+                                    </div>
+
+                                    <hr>
+
+                                    <h5>SEO Settings</h5>
+
+                                    <div class="form-group">
+                                        <label>Meta Title</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="meta_title" 
+                                            placeholder="SEO Meta Title"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Meta Description</label>
+                                        <textarea 
+                                            name="meta_description" 
+                                            class="form-control" 
+                                            rows="3"
+                                            placeholder="SEO Meta Description"
+                                        ></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Meta Keywords</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="meta_keywords" 
+                                            placeholder="keyword 1, keyword 2, keyword 3"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Canonical URL</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="canonical_url" 
+                                            placeholder="https://yourwebsite.com/blog/blog-slug"
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="draft">Draft</option>
+                                            <option value="published">Published</option>
+                                        </select>
+                                    </div>
+
+                                    <button name="add_blog" type="submit" class="btn btn-primary">
+                                        Add Blog
+                                    </button>
+
+                                    <a href="./Blog.php" class="btn btn-secondary">
+                                        Cancel
+                                    </a>
+
+                                </form>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
 
     </div>
-
-
-  </div>
-  <!-- /.content-wrapper -->
-
-  <!-- <footer class="main-footer">
-    <strong>Copyright &copy; 2023 Pelzon</strong>
-    All rights reserved.
-    <div class="float-right d-none d-sm-inline-block">
-      
-    </div>
-  </footer> -->
 
 </div>
-<!-- ./wrapper -->
 
-<?php
-include 'footer.php';
+<?php include 'footer.php'; ?>
 
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
+<script>
+let editor;
 
-?>
+ClassicEditor
+    .create(document.querySelector('#blogEditor'), {
+        toolbar: [
+            'heading',
+            '|',
+            'bold',
+            'italic',
+            'link',
+            'imageUpload',
+            'bulletedList',
+            'numberedList',
+            'blockQuote',
+            '|',
+            'undo',
+            'redo'
+        ]
+    })
+    .then(e => {
+        editor = e;
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+// Validate form before submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (!editor.getData().trim()) {
+        e.preventDefault();
+        alert('Blog content is required. Please write some content.');
+        return false;
+    }
+});
+</script>

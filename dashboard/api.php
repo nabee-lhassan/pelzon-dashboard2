@@ -1,48 +1,53 @@
 <?php
 include '../conection.php';
 
+header("Content-Type: application/json");
 
-
-
-
-// $select = "SELECT * FROM blog";
-
-$select = "SELECT * FROM blog
-  LEFT JOIN category ON blog.category = category.cat_id
-  LEFT JOIN login ON blog.Author_id = login.id
-   ORDER BY blog.Publish_data DESC";
-
-$response = array();
+$select = "
+    SELECT 
+        blogs.id,
+        blogs.category_id,
+        blogs.title,
+        blogs.slug,
+        blogs.short_description,
+        blogs.content,
+        blogs.featured_image,
+        blogs.image_alt,
+        blogs.meta_title,
+        blogs.meta_description,
+        blogs.meta_keywords,
+        blogs.canonical_url,
+        blogs.status,
+        blogs.views,
+        blogs.created_at,
+        blogs.updated_at,
+        category.cat_name AS category_name,
+        category.cat_slug AS category_slug
+    FROM blogs
+    LEFT JOIN category 
+        ON blogs.category_id = category.cat_id
+    WHERE blogs.status = 'published'
+    ORDER BY blogs.created_at DESC
+";
 
 $query = mysqli_query($conn, $select);
 
-if ($query){
+if ($query) {
 
-  header("Content-Type: application/json"); // Fix the header content type
+    $output = mysqli_fetch_all($query, MYSQLI_ASSOC);
 
-$output = mysqli_fetch_all($query, MYSQLI_ASSOC);
+    echo json_encode([
+        "status" => true,
+        "message" => "Published blogs fetched successfully",
+        "data" => $output
+    ]);
 
- 
+} else {
 
-echo json_encode($output);
-
-
-  // while ($row = mysqli_fetch_assoc($query)){
-
-  //   $category = array(
-  //     'Blog_id' => $row['Blog_id'],
-  //     'Blog_title' => $row['Blog_title'],
-  //     'Blog_body' => $row['Blog_body'],
-  //     'Blog_image' => $row['Blog_image'],
-  //     'Blog_Category' => $row['category'],
-  //   );
-
-  //   $response[] = $category;
-  // }
-
-  
+    echo json_encode([
+        "status" => false,
+        "message" => "Query failed: " . mysqli_error($conn),
+        "data" => []
+    ]);
 }
-
-
-
 ?>

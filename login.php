@@ -3,68 +3,51 @@ session_start();
 include 'conection.php';
 
 if (isset($_SESSION['admin'])) {
-
-  echo 'You have log out';
-  header("Location:dashboard/admin.php");
-
+    header("Location: dashboard/admin.php");
+    exit;
 }
-
-
 
 if (isset($_POST['submit'])) {
 
+    $username = mysqli_real_escape_string($conn, $_POST['user']);
+    $password = $_POST['pass'];
 
-  $username = $_POST['user'];
-  $password = $_POST['pass'];
+    $sql = "SELECT * FROM users WHERE name='$username'";
+    $result = mysqli_query($conn, $sql);
 
-  $encrypted_pass =md5($password) ;
+    if ($result && mysqli_num_rows($result) > 0) {
 
-  $sql = "SELECT  * FROM login WHERE  username = '$username' AND password= '$encrypted_pass'  ";
- 
+        $user = mysqli_fetch_assoc($result);
 
-  
-  //  print_r ($sql);  die ();
-  $result = mysqli_query($conn, $sql);
-  $count = mysqli_num_rows($result);
+        if (password_verify($password, $user['password'])) {
 
+            $data = array(
+                $user['id'],
+                $user['name'],
+                $user['email'],
+                $user['password'],
+                $user['user_image'] ?? ''
+            );
 
+            $_SESSION['admin'] = $data;
 
+            header("Location: dashboard/admin.php");
+            exit;
 
-  //  print_r ($arr);  die ();
+        } else {
+            echo '<script>
+                alert("Invalid password");
+                window.location.href="login.php";
+            </script>';
+        }
 
-
-
-  if ($count > 0) {
-
-    $arr = mysqli_fetch_assoc($result);
-
-    $data = array($arr['id'], $arr['username'],$arr['email'], $arr['password'], $arr['user_image']);
-
-    // $data = array($arr['username'], $arr['password']);
-
-    $_SESSION['admin'] = $data;
-
-    header("Location:dashboard/admin.php");
-
-    // $_SESSION['admin'] = $_POST['user'];
-
-
-
-
-  } else {
-
-    echo '<script>
-
-    window.location.href="login.php";
-    alert("invalid user or Password ")
-    
-    
-    </script>';
-  }
-
+    } else {
+        echo '<script>
+            alert("User not found");
+            window.location.href="login.php";
+        </script>';
+    }
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">

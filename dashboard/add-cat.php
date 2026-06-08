@@ -1,179 +1,141 @@
 <?php
 include '../conection.php';
-
 include 'sidebar.php';
 
+function createSlug($string) {
+    $slug = strtolower(trim($string));
+    $slug = preg_replace('/[^a-z0-9-]+/', '-', $slug);
+    $slug = preg_replace('/-+/', '-', $slug);
+    return trim($slug, '-');
+}
 
-if (isset($_POST['add'])){
+if (isset($_POST['add'])) {
 
-  $cate = mysqli_real_escape_string($conn,$_POST['cate']);
+    $cate = mysqli_real_escape_string($conn, $_POST['cate']);
+    $cate = trim($cate);
 
-  // $select = "SELECT * FROM category WHERE cat_name = '$cate'";
-  $select = "SELECT * FROM category WHERE cat_name = '$cate' AND author_id = '$user_id';";
+    if (empty($cate)) {
+        $_SESSION["msg"] = '<div class="alert alert-warning" role="alert">Please enter category name.</div>';
+        header("Location: add-cat.php");
+        exit;
+    }
 
-  $query = mysqli_query($conn, $select);
+    $cat_slug = createSlug($cate);
 
-  $row = mysqli_num_rows($query);
+    // Check duplicate category
+    $select = "SELECT * FROM category WHERE cat_name = '$cate' OR cat_slug = '$cat_slug'";
+    $query = mysqli_query($conn, $select);
 
-  if ($row){
+    if (mysqli_num_rows($query) > 0) {
 
+        $_SESSION["msg"] = '<div class="alert alert-info" role="alert">
+            This category is already added.
+        </div>';
 
-  //   echo '<script>
-  //   alert("this category is already added")
-  // </script>';
+        header("Location: add-cat.php");
+        exit;
 
+    } else {
 
-  
-  $msg = '<div class="alert alert-info" role="alert">
-  This category is already added
-</div>';
+        $insert = "INSERT INTO category (cat_name, cat_slug, status) 
+                   VALUES ('$cate', '$cat_slug', 'active')";
 
-  $_SESSION ["msg"] = $msg;
+        $insert_query = mysqli_query($conn, $insert);
 
-  header("location: add-cat.php");
+        if ($insert_query) {
 
-  }else{
+            $_SESSION["msg"] = '<div class="alert alert-success" role="alert">
+                Category added successfully.
+            </div>';
 
-    $insert = "INSERT INTO category (cat_name, Author_id)  VALUES ('$cate', '$user_id') ";
-    $insert_query = mysqli_query($conn, $insert);
+            header("Location: category.php");
+            exit;
 
-    if($insert_query){
-    //   echo '<script>
-    //   alert("Category is added successfully")
-    // </script>';
-    header("location:category.php");
+        } else {
 
-$msg = '<div class="alert alert-success" role="alert">
-Category is added successfully
+            $_SESSION["msg"] = '<div class="alert alert-warning" role="alert">
+                Something went wrong: ' . mysqli_error($conn) . '
+            </div>';
+
+            header("Location: add-cat.php");
+            exit;
+        }
+    }
+}
+?>
+
+<div class="wrapper">
+
+    <div class="content-wrapper">
+
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Add Category</h1>
+                    </div>
+
+                    <div class="col-sm-6 text-right">
+                        <a href="category.php" class="btn btn-secondary">View Categories</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="content">
+            <div class="container-fluid">
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-6">
+
+                        <?php
+                        if (isset($_SESSION["msg"])) {
+                            echo $_SESSION["msg"];
+                            unset($_SESSION["msg"]);
+                        }
+                        ?>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Category Details</h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <form action="" method="POST">
+
+                                    <div class="form-group">
+                                        <label>Category Name</label>
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            name="cate" 
+                                            placeholder="Enter Category Name"
+                                            required
+                                        >
+                                    </div>
+
+                                    <button name="add" type="submit" class="btn btn-primary">
+                                        Add Category
+                                    </button>
+
+                                    <a href="category.php" class="btn btn-secondary">
+                                        Go Back
+                                    </a>
+
+                                </form>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
 
 </div>
 
-<a class="btn btn-primary mx-3" href="category.php">View Category </a>
-';
-
-
-
-$_SESSION ["msg"] = $msg;
-
-header("location: add-cat.php");
-    }
-    else{
-  //     echo '<script>
-  //   alert("Something went wrong")
-  // </script>';
-
-
-
-  $msg = '<div class="alert alert-warning" role="alert">
-  Something went wrong
-  </div>';
-
-  $_SESSION ["msg"] = $msg;
-
-  header("location: add-cat.php");
-
-    }
-
-    
-  }
-
-
-
-
-  
-}
-
-
-
-
-
-
-// // echo $_SESSION['admin'];
-// if (isset($_SESSION['admin'])){
-
-//   if(isset($_POST['logout'])){
-//     session_destroy();
-//     header("Location:../login.php");
-//   }
-// }else{
-
-// echo 'You have log out';
-// header("Location:../login.php");
-// }
-
-
-?>
-
-  <div class="wrapper">
-
-
-
-
-
-    <!-- Content Wrapper. Contains page content -->
-    <div class="content-wrapper">
-      <!-- Content Header (Page header) -->
-      <div class="content-header">
-        <div class="container-fluid">
-          <div class="row mb-2">
-            <div class="col-sm-6">
-              <h1 class="m-0">Dashboard</h1>
-            </div><!-- /.col -->
-            <div class="col-sm-6">
-
-            </div><!-- /.col -->
-          </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
-      </div>
-      <!-- /.content-header -->
-
-
-
-      <!-- content body  -->
-
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-12 d-flex justify-content-center">
-
-            <div class="mb-3 " style="background-color: #e9e9e9; width: 50%; padding: 20px; box-shadow: 0px 0px 6px 0px gray;">
-              
-            <form action="" method="POST">
-
-            <label for="formGroupExampleInput" class="form-label"></label>
-              <input type="text" class="form-control" name="cate" id="formGroupExampleInput"
-                placeholder="Enter Category">
-<button name="add" class="btn btn-primary m-2">Add</button>
-            </form>
-
-            
-            </div>
-
-
-          </div>
-
-      
-        </div>
-
-
-
-
-      </div>
-
-
-    </div>
-    <!-- /.content-wrapper -->
-
-    <!-- <footer class="main-footer">
-    <strong>Copyright &copy; 2023 Pelzon</strong>
-    All rights reserved.
-    <div class="float-right d-none d-sm-inline-block">
-      
-    </div>
-  </footer> -->
-
-  </div>
-  <!-- ./wrapper -->
-
-  <?php
-  include 'footer.php';
-  ?>
+<?php include 'footer.php'; ?>

@@ -1,230 +1,214 @@
 <?php 
-
 include '../conection.php';
 
 error_reporting(E_ERROR | E_PARSE);
 
+/* =========================
+   DELETE SELECTED CATEGORIES
+========================= */
+
+if (isset($_POST['delete_data'])) {
+
+    if (empty($_POST['cat_id'])) {
+        echo '
+        <script>
+            alert("Oops! No category selected to delete");
+            window.location.href="category.php";
+        </script>';
+        exit;
+    }
+
+    $allId = $_POST['cat_id'];
+
+    // Safe integer IDs
+    $allId = array_map('intval', $allId);
+    $extract_id = implode(',', $allId);
+
+    /*
+      Optional safety:
+      Agar category kisi blog me use ho rahi hai,
+      to delete karne se pehle blogs ko Uncategorized kar do.
+    */
+    $updateBlogs = "UPDATE blogs SET category_id = NULL WHERE category_id IN ($extract_id)";
+    mysqli_query($conn, $updateBlogs);
+
+    $delete = "DELETE FROM category WHERE cat_id IN ($extract_id)";
+    $deleteQuery = mysqli_query($conn, $delete);
+
+    if ($deleteQuery) {
+        echo '
+        <script>
+            alert("Selected categories deleted successfully");
+            window.location.href="category.php";
+        </script>';
+        exit;
+    } else {
+        echo '
+        <script>
+            alert("Something went wrong while deleting");
+            window.location.href="category.php";
+        </script>';
+        exit;
+    }
+}
+
 include 'sidebar.php';
 
+/* =========================
+   FETCH CATEGORIES
+========================= */
 
+$select = "SELECT * FROM category ORDER BY created_at DESC";
+$query = mysqli_query($conn, $select);
 
-
+if (!$query) {
+    die("Query Failed: " . mysqli_error($conn));
+}
 ?>
-
 
 <body class="hold-transition sidebar-mini layout-fixed">
+
 <div class="wrapper">
 
+    <div class="content-wrapper">
 
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Category</h1>
+                    </div>
 
-  <?php 
-  
-  $select = "SELECT * FROM category WHERE Author_id = $user_id";
+                    <div class="col-sm-6 text-right">
+                        <a href="./add-cat.php" class="btn btn-primary">
+                            Add New
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  $query = mysqli_query($conn,$select);
+        <section class="content">
+            <div class="container-fluid">
 
-// Delete All Categories Functionality start
+                <form action="" method="POST">
 
-if (isset($_POST['delete_data'])){
-  
-  $allId = $_POST['cat_id'];
-  
+                    <div class="card">
+                        <div class="card-body">
 
+                            <table class="table table-bordered table-striped">
 
+                                <thead>
+                                    <tr>
+                                        <th style="width:10px;">SR.NO</th>
+                                        <th>Category</th>
+                                        <th>Slug</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th style="width:10px;">Action</th>
+                                        <th style="width:10px;">
+                                            <button 
+                                                type="submit"
+                                                class="btn btn-danger btn-sm delete-all-btn" 
+                                                onclick="return confirm('Are you sure you want to delete selected categories?')" 
+                                                name="delete_data"
+                                            >
+                                                Delete
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
 
-  if(empty($allId)){
-  
-?>
+                                <tbody>
 
-<script>
-    alert("Oops! No Data to Delete")
-      window.location.href="category.php";
-    </script>
-<?php
+                                    <?php   
+                                    $SR = 0;
 
-  }else{
+                                    if (mysqli_num_rows($query) > 0) {
+                                        while ($row = mysqli_fetch_assoc($query)) {
 
-    $extract_id = implode(',',$allId);
-    $delete = "DELETE FROM category WHERE cat_id IN( $extract_id)";
+                                            $createdDate = !empty($row['created_at'])
+                                                ? date("Y-m-d", strtotime($row['created_at']))
+                                                : '-';
 
-    $query = mysqli_query($conn,$delete);
-  
-  if($query){
-  
-    header("Location:category.php");
-  }else{
-    echo '<script>
-  
-    alert("Something went wrong")
-    </script>';
-  }
-  }
+                                            $status = !empty($row['status']) 
+                                                ? $row['status'] 
+                                                : 'active';
+                                    ?>
 
+                                    <tr>
+                                        <td><?php echo ++$SR; ?></td>
 
+                                        <td>
+                                            <?php echo htmlspecialchars($row['cat_name']); ?>
+                                        </td>
 
-}
+                                        <td>
+                                            <?php echo htmlspecialchars($row['cat_slug'] ?? '-'); ?>
+                                        </td>
 
-// Delete All Categories Functionality end
+                                        <td>
+                                            <?php if ($status == 'active') { ?>
+                                                <span class="badge badge-success">Active</span>
+                                            <?php } else { ?>
+                                                <span class="badge badge-warning">Inactive</span>
+                                            <?php } ?>
+                                        </td>
 
-// Delete one item Categories Functionality start
+                                        <td>
+                                            <?php echo $createdDate; ?>
+                                        </td>
 
-// if (isset($_POST['single_del'])){
-  
-//   $id = $_GET['id'];
-  
-//     $delete = "DELETE FROM category WHERE id = $id ";
+                                        <td>
+                                            <a class="btn btn-success btn-sm" href="edit.php?id=<?php echo $row['cat_id']; ?>">
+                                                Edit
+                                            </a>
+                                        </td>
 
-//     $query = mysqli_query($conn,$delete);
-  
-//   if($query){
-  
-//     header("Location:category.php");
-//   }else{
-//     echo '<script>
-  
-//     alert("Something went wrong")
-//     </script>';
-//   }
-//   }
+                                        <td>
+                                            <input 
+                                                type="checkbox" 
+                                                name="cat_id[]" 
+                                                value="<?php echo $row['cat_id']; ?>" 
+                                                class="single_check"
+                                            >
+                                        </td>
+                                    </tr>
 
+                                    <?php 
+                                        }
+                                    } else {
+                                    ?>
 
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            No Category Data Found
+                                        </td>
+                                    </tr>
 
+                                    <?php } ?>
 
+                                </tbody>
 
+                            </table>
 
-// Delete one item Categories Functionality end
+                        </div>
+                    </div>
 
-  
-  ?>
+                </form>
 
-
-
-  <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">Category</h1>
-          </div><!-- /.col -->
-          <div class="col-sm-6">
-            
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
-
-<div class="container">
-<div class="row">
-  <div class="col-lg-12">
-    <a href="./add-cat.php" class="btn btn-primary m-3">Add New</a>
-  </div>
-</div>
-
-
-
-
-<form action="" method="POST">
-  <div class="row">
-    <div class="col-lg-12">
-    <table class="table">
- 
-    <thead>
-    <tr>
-      <th scope="col" style="width:10px;">SR.NO</th>
-      
-      <th scope="col">Category</th>
-      
-      
-      <th scope="col" style="width:10px;">Action</th>
-      <!-- <th scope="col" style="width:10px;"></th> -->
-      <th scope="col"><button class="btn btn-danger delete-all-btn" onclick=" return confirm('Are Your sure you Want To Delete')" name="delete_data" >Delete</button></th>
-    </tr>
-  </thead>
-
- 
-  <?php   
-  
-// SR NO counter 
-  $SR = 0;
-  
-  
-  if(mysqli_num_rows($query) > 0){
-      while ($row = mysqli_fetch_array($query)){
-      // $id = $_GET ['id'];
-      
-
-?>
-
-
-  <tbody>
-
-<tr>
-  <td ><?php echo ++$SR; ?></td>
-  <td><?php echo $row['cat_name'] ?></td>
-  <td><a class="btn btn-success" href="edit.php?id=<?= $row ['cat_id'] ?>">Edit</a>  </td>
-  <!-- <td>   <button class="btn btn-success" name="single_del" >Delete</button>  </td> -->
-  
-  <td style="width:10px;"><input type="checkbox" name="cat_id[]" value="<?= $row['cat_id'] ?>" class="single_check"></td>
-  
-      
-    </tr>
-
-   
-
-<?php
-}
-    }
-    else {
-
-      
-?>
-
-<p style="text-align:center;background-color: #ad390663;padding: 7px 0px; font-size: 19px;font-weight: 600;"><?php echo "No data Found" ?></p>
-
-<?php
-
-    }
-
-     
-  
-  
-  
-  
-  ?>
-  
-  
-  </tbody>
-  
-</table>
+            </div>
+        </section>
 
     </div>
-  </div>
-  </form>
+
 </div>
 
-    </div>
-    <!-- /.content-header -->
+<?php include 'footer.php'; ?>
 
-    
-  </div>
-  <!-- /.content-wrapper -->
-  
-</div>
-<!-- ./wrapper -->
-<?php 
-include 'footer.php';
-?>
-
-<!-- jQuery -->
 <script src="plugins/jquery/jquery.min.js"></script>
-<!-- jQuery UI 1.11.4 -->
 <script src="plugins/jquery-ui/jquery-ui.min.js"></script>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+
 <script>
-  $.widget.bridge('uibutton', $.ui.button)
+    $.widget.bridge('uibutton', $.ui.button);
 </script>
-
-
-
-

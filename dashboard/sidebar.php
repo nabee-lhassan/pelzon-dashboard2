@@ -106,7 +106,7 @@ $page = basename($_SERVER['PHP_SELF'], ".php");
       <!-- Brand Logo -->
       <a href="/index.php" class="brand-link">
         <div style="height:50px;">
-          <img src="./image/logo.webp" alt="AdminLTE Logo" class="brand-image  elevation-1">
+          <img src="../image/logo-wht.webp" alt="AdminLTE Logo" class="brand-image  elevation-1">
         </div>
       </a>
 
@@ -114,9 +114,9 @@ $page = basename($_SERVER['PHP_SELF'], ".php");
       <div class="sidebar">
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-          <div class="image">
+          <!-- <div class="image">
             <img src="../image/<?php echo $user_image; ?>"   class=" elevation-2" alt="User Image">
-          </div>
+          </div> -->
           <div class="info">
             <a class="d-block">welcome
               <?php echo $user_name; ?>
