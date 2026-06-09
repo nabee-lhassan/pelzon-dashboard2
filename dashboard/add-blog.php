@@ -96,7 +96,7 @@ if (isset($_POST['add_blog'])) {
 
     if ($insert_query) {
         $_SESSION["msg"] = '<div class="alert alert-success" role="alert">Blog Added Successfully</div>';
-        header("Location:Blog.php");
+        header("Location:blog.php");
         exit;
     } else {
         $_SESSION["msg"] = '<div class="alert alert-danger" role="alert">Oops! Something went wrong: ' . mysqli_error($conn) . '</div>';
@@ -122,7 +122,7 @@ $query = mysqli_query($conn, $select);
                     </div>
 
                     <div class="col-sm-6 text-right">
-                        <a href="./Blog.php" class="btn btn-secondary">Go Back</a>
+                        <a href="./blog.php" class="btn btn-secondary">Go Back</a>
                     </div>
                 </div>
             </div>
@@ -289,7 +289,7 @@ $query = mysqli_query($conn, $select);
                                         Add Blog
                                     </button>
 
-                                    <a href="./Blog.php" class="btn btn-secondary">
+                                    <a href="./blog.php" class="btn btn-secondary">
                                         Cancel
                                     </a>
 
@@ -317,20 +317,23 @@ let editor;
 
 ClassicEditor
     .create(document.querySelector('#blogEditor'), {
-        toolbar: [
-            'heading',
-            '|',
-            'bold',
-            'italic',
-            'link',
-            'imageUpload',
-            'bulletedList',
-            'numberedList',
-            'blockQuote',
-            '|',
-            'undo',
-            'redo'
-        ]
+       toolbar: [
+    'heading',
+    '|',
+    'bold',
+    'italic',
+    'link',
+    'imageUpload',
+    '|',
+    'alignment',
+    '|',
+    'bulletedList',
+    'numberedList',
+    'blockQuote',
+    '|',
+    'undo',
+    'redo'
+]
     })
     .then(e => {
         editor = e;

@@ -1,6 +1,12 @@
 <?php
 session_start();
 
+// Check session BEFORE including header.php
+if (!isset($_SESSION['admin'])) {
+  header("Location:../login.php");
+  exit;
+}
+
 include 'header.php';
 
 $user_id = $_SESSION['admin'][0];
@@ -8,18 +14,11 @@ $user_name = $_SESSION['admin'][1];
 $user_image = $_SESSION['admin'][4];
 
 
-if (!isset($_SESSION['admin'])) {
-
-  echo 'You have log out';
-  header("Location:../login.php");
-
-}
-
-
 if (isset($_POST['logout'])) {
 
   session_destroy();
   header("Location:../login.php");
+  exit;
 }
 
 
@@ -140,7 +139,7 @@ $page = basename($_SERVER['PHP_SELF'], ".php");
               </a>
             </li>
             <li class="nav-item">
-              <a href="Blog.php" class="nav-link <?= ($page == "Blog") ? 'active' : ''; ?>">
+              <a href="blog.php" class="nav-link <?= ($page == "Blog") ? 'active' : ''; ?>">
 
                 <p>
                   Blog

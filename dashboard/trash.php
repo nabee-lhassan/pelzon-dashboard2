@@ -15,7 +15,7 @@ function createSlug($string) {
 $BlogId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($BlogId <= 0) {
-    header("Location: Blog.php");
+    header("Location: blog.php");
     exit;
 }
 
@@ -44,11 +44,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete') {
     
     if ($deleteQuery) {
         $_SESSION["msg"] = '<div class="alert alert-success">Blog deleted successfully.</div>';
-        header("Location: Blog.php");
+        header("Location: blog.php");
         exit;
     } else {
         $_SESSION["msg"] = '<div class="alert alert-danger">Failed to delete blog: ' . mysqli_error($conn) . '</div>';
-        header("Location: Blog.php");
+        header("Location: blog.php");
         exit;
     }
 }
@@ -59,7 +59,7 @@ $query = mysqli_query($conn, $select);
 
 if (!$query || mysqli_num_rows($query) == 0) {
     $_SESSION["msg"] = '<div class="alert alert-warning">Blog not found.</div>';
-    header("Location: Blog.php");
+    header("Location: blog.php");
     exit;
 }
 
@@ -158,7 +158,7 @@ if (isset($_POST['update_blog'])) {
 
     if ($updateQuery) {
         $_SESSION["msg"] = '<div class="alert alert-success">Blog updated successfully.</div>';
-        header("Location: Blog.php");
+        header("Location: blog.php");
         exit;
     } else {
         $_SESSION["msg"] = '<div class="alert alert-danger">Something went wrong: ' . mysqli_error($conn) . '</div>';
@@ -184,7 +184,7 @@ $catQuery = mysqli_query($conn, $catSelect);
                     </div>
 
                     <div class="col-sm-6 text-right">
-                        <a href="./Blog.php" class="btn btn-secondary">Go Back</a>
+                        <a href="./blog.php" class="btn btn-secondary">Go Back</a>
                     </div>
                 </div>
             </div>
@@ -365,7 +365,7 @@ $catQuery = mysqli_query($conn, $catSelect);
                                         Update Blog
                                     </button>
 
-                                    <a href="./Blog.php" class="btn btn-secondary">
+                                    <a href="./blog.php" class="btn btn-secondary">
                                         Cancel
                                     </a>
 

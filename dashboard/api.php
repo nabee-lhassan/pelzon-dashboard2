@@ -1,7 +1,24 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include '../conection.php';
 
 header("Content-Type: application/json");
+
+$debug = [];
+
+// Check connection database
+$dbResult = mysqli_query($conn, "SELECT DATABASE() AS db_name");
+$debug['connected_database'] = $dbResult ? mysqli_fetch_assoc($dbResult)['db_name'] : mysqli_error($conn);
+
+// Count all blogs
+$countAll = mysqli_query($conn, "SELECT COUNT(*) AS total FROM blogs");
+$debug['total_blogs'] = $countAll ? mysqli_fetch_assoc($countAll)['total'] : mysqli_error($conn);
+
+// Count published blogs
+$countPublished = mysqli_query($conn, "SELECT COUNT(*) AS total FROM blogs WHERE status = 'published'");
+$debug['published_blogs'] = $countPublished ? mysqli_fetch_assoc($countPublished)['total'] : mysqli_error($conn);
 
 $select = "
     SELECT 
@@ -38,7 +55,8 @@ if ($query) {
 
     echo json_encode([
         "status" => true,
-        "message" => "Published blogs fetched successfully",
+        "message" => "API working",
+        "debug" => $debug,
         "data" => $output
     ]);
 
@@ -47,6 +65,7 @@ if ($query) {
     echo json_encode([
         "status" => false,
         "message" => "Query failed: " . mysqli_error($conn),
+        "debug" => $debug,
         "data" => []
     ]);
 }

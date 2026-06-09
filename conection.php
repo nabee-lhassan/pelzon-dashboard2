@@ -1,24 +1,17 @@
-
-
 <?php
 $servername = "localhost";
 $username = "root";
-$password = "";
+$password = '';
 $dbname = "newTest";
 
-// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
-// Check connection
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die(json_encode([
+        "status" => false,
+        "message" => "Database connection failed: " . $conn->connect_error
+    ]));
 }
 
-// echo "Connected successfully";
-// header("Location:login.php");
-
-// Perform your database operations here
-
-// Close connection
-// $conn->close();
+$conn->set_charset("utf8mb4");
 ?>

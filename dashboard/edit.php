@@ -8,6 +8,7 @@ $id = $_GET['id'];
 
 if (empty($id)){
   header('Location:category.php');
+  exit;
 }
 
 
@@ -81,6 +82,7 @@ if (empty($id)){
 
            $_SESSION ["msg"] = $msg;
            header("Location:category.php");
+           exit;
           }else{
 
             $msg = '<div class="alert alert-warning" role="alert">
@@ -89,6 +91,7 @@ if (empty($id)){
  
             $_SESSION ["msg"] = $msg;
             header("Location:category.php");
+            exit;
             
           }
           }

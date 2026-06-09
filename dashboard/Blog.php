@@ -13,7 +13,7 @@ if (isset($_POST['delete_data'])) {
         echo '
         <script>
             alert("Oops! No blog selected to delete");
-            window.location.href="Blog.php";
+            window.location.href="blog.php";
         </script>';
         exit;
     }
@@ -48,14 +48,14 @@ if (isset($_POST['delete_data'])) {
         echo '
         <script>
             alert("Selected blogs deleted successfully");
-            window.location.href="Blog.php";
+            window.location.href="blog.php";
         </script>';
         exit;
     } else {
         echo '
         <script>
             alert("Something went wrong while deleting");
-            window.location.href="Blog.php";
+            window.location.href="blog.php";
         </script>';
         exit;
     }
